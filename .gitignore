@@ -1,0 +1,20 @@
+# virtualenv
+venv/
+.venv/
+
+# python cache
+__pycache__/
+*.pyc
+
+# env files
+.env
+.env.*
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build / test artifacts
+*.log
+*.sqlite3

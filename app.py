@@ -20,7 +20,7 @@ app = FastAPI()
 
 origins = [
     "http://localhost:3000",
-    "https://your-frontend-name.vercel.app"
+    "https://stacbot-fe.vercel.app/"
 ]
 
 app.add_middleware(
@@ -36,6 +36,9 @@ app.add_middleware(
 OPENAI_MODEL = "gpt-4o-mini"
 collection_name_openai = "stacA2_collection_1250_225_openAI"
 collection_name_offline_feedback = "stacA2_offline_feedback"
+collection_m3_name_openai = "stacM3_collection_1250_150_openAI"
+collection_m3_name_offline_feedback = "stacA2_offline_feedback"
+
 
 chat_llm_openai = ChatOpenAI(
     model=OPENAI_MODEL,
@@ -74,9 +77,18 @@ async def chat_endpoint(request: QueryRequest):
             # Embed new query
             query_vector = openai_embeddings.embed_query(user_query)
 
+            if "A2" in user_query.upper():  # case-insensitive check
+                collection_name = collection_name_openai
+                collection_feedback = collection_name_offline_feedback
+            elif "M3" in user_query.upper():
+                collection_name = collection_m3_name_openai
+                collection_feedback = collection_m3_name_offline_feedback
+            
+            print(f"Using collection: {collection_name} and feedback collection: {collection_feedback}")
+            
             # Search in the offline feedback collection (limit=3)
             feedback_results = qdrant_client.query_points(
-                collection_name="stacA2_offline_feedback",
+                collection_name=collection_feedback,
                 query=query_vector,
                 limit=3,
                 with_payload=True,
@@ -101,7 +113,7 @@ async def chat_endpoint(request: QueryRequest):
             
             # Normal retrieval from main documents
             retrieved = qdrant_client.query_points(
-                collection_name=collection_name_openai,
+                collection_name=collection_name,
                 query=query_vector,
                 limit=15,
                 with_payload=True
@@ -170,9 +182,18 @@ async def chat_feedback_endpoint(request: FeedbackRequest):
         # Embed new query
         feedback_vector = openai_embeddings.embed_query(user_feedback)
 
+        if "A2" in user_feedback.upper():  # case-insensitive check
+            collection_name = collection_name_openai
+            collection_feedback = collection_name_offline_feedback
+        elif "M3" in user_feedback.upper():
+            collection_name = collection_m3_name_openai
+            collection_feedback = collection_m3_name_offline_feedback
+        
+        print(f"Using collection: {collection_name} and feedback collection: {collection_feedback}")
+        
         # Search in the offline feedback collection (limit=3)
         feedback_results = qdrant_client.query_points(
-            collection_name="stacA2_offline_feedback",
+            collection_name=collection_feedback,
             query=feedback_vector,
             limit=3,
             with_payload=True,
@@ -197,7 +218,7 @@ async def chat_feedback_endpoint(request: FeedbackRequest):
 
         # Retrieve context from main collection
         retrieved_feedback = qdrant_client.query_points(
-            collection_name=collection_name_openai,
+            collection_name=collection_name,
             query=feedback_vector,
             limit=10,
             with_payload=True

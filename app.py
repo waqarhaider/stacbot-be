@@ -1,8 +1,7 @@
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.documents import Document
-from langchain.prompts import PromptTemplate
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import VectorParams, PointStruct
+from qdrant_client.http.models import PointStruct
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel

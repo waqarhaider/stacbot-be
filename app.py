@@ -35,9 +35,9 @@ app.add_middleware(
 # --- MODELS & CLIENTS ---
 OPENAI_MODEL = "gpt-4o-mini"
 collection_name_openai = "stacA2_collection_1250_225_openAI"
-collection_name_offline_feedback = "stacA2_offline_feedback"
+collection_A2_name_offline_feedback = "stacA2_offline_feedback"
 collection_m3_name_openai = "stacM3_collection_1250_150_openAI"
-collection_m3_name_offline_feedback = "stacA2_offline_feedback"
+collection_m3_name_offline_feedback = "stacM3_offline_feedback"
 
 
 chat_llm_openai = ChatOpenAI(
@@ -57,30 +57,34 @@ qdrant_client = QdrantClient(
 # --- Request Schemas ---
 class QueryRequest(BaseModel):
     query: str
+    chatType: str
 
 class FeedbackRequest(BaseModel):
     user_feedback: str
     previous_question: str = None
     previous_answer: str = None
+    chatType: str
 
 class OfflineFeedbackRequest(BaseModel):
     question_asked: str
     answer_received: str
     helpful_feedback: str
+    feedbackType: str
 
 # --- /chat endpoint ---
 @app.post("/chat")
 async def chat_endpoint(request: QueryRequest):
     user_query = request.query
-
+    chatType = request.chatType
+    
     try:
             # Embed new query
             query_vector = openai_embeddings.embed_query(user_query)
 
-            if "A2" in user_query.upper():  # case-insensitive check
+            if chatType.upper()== "A2" :  
                 collection_name = collection_name_openai
-                collection_feedback = collection_name_offline_feedback
-            elif "M3" in user_query.upper():
+                collection_feedback = collection_A2_name_offline_feedback
+            elif chatType.upper()== "M3":
                 collection_name = collection_m3_name_openai
                 collection_feedback = collection_m3_name_offline_feedback
             
@@ -176,16 +180,17 @@ async def chat_feedback_endpoint(request: FeedbackRequest):
     user_feedback = request.user_feedback
     previous_question = request.previous_question
     previous_answer = request.previous_answer
+    chatType = request.chatType
 
     try:
        
         # Embed new query
         feedback_vector = openai_embeddings.embed_query(user_feedback)
 
-        if "A2" in user_feedback.upper():  # case-insensitive check
+        if chatType.upper()== "A2": 
             collection_name = collection_name_openai
-            collection_feedback = collection_name_offline_feedback
-        elif "M3" in user_feedback.upper():
+            collection_feedback = collection_A2_name_offline_feedback
+        elif chatType.upper()== "M3":
             collection_name = collection_m3_name_openai
             collection_feedback = collection_m3_name_offline_feedback
         
@@ -287,10 +292,16 @@ async def save_offline_feedback(feedback: dict):
     question_asked = feedback.get("question_asked")
     answer_received = feedback.get("answer_received")
     helpful_feedback = feedback.get("helpful_feedback")
+    feedbackType = feedback.get("feedbackType")
 
     if not all([question_asked, helpful_feedback]):
         return {"status": "error", "detail": "All required fields must be filled."}
 
+    if feedbackType.upper()== "A2": 
+        collection_name_offline_feedback = collection_A2_name_offline_feedback
+    elif feedbackType.upper()== "M3":
+        collection_name_offline_feedback = collection_m3_name_offline_feedback
+    
     # --- Config ---
     MAX_UPSERT_RETRIES = 10
     INITIAL_UPSERT_DELAY_SECONDS = 5

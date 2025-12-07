@@ -141,4 +141,10 @@ You can now:
 * Start experimenting
 * Develop new features
 
+# 👉 Deployment
+
+The deployment was completed using Render (https://dashboard.render.com/).
+Please use the department email for any future updates so the project does not need to be redeployed from scratch.
+Alternatively, you may create a new Render account using your university email and redeploy the application if necessary.
+
 If you need any help setting it up, just let me know on waqarhaidercheema@gmail.com!
